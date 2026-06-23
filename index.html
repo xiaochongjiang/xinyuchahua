@@ -9,31 +9,45 @@
     <style>
         body {
             font-family: 'Noto Sans SC', sans-serif;
-            background-color: #0f172a; /* Deep slate/navy */
+            background-color: #0f172a; 
             color: #f8fafc;
             overflow-x: hidden;
             -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation; /* 消除移动端点击延迟 */
         }
         .title-font {
             font-family: 'ZCOOL KuaiLe', cursive, 'Noto Sans SC';
         }
         
-        /* Background decorative elements */
         .bg-pattern {
             background-image: radial-gradient(rgba(253, 224, 71, 0.1) 1px, transparent 1px);
             background-size: 24px 24px;
         }
 
-        /* 3D Flip Card Styles */
-        .perspective-1000 { perspective: 1000px; }
-        .transform-style-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
+        /* 3D Flip Card Styles - 增加了webkit前缀修复苹果手机不翻转的Bug */
+        .perspective-1000 { 
+            perspective: 1000px; 
+            -webkit-perspective: 1000px;
+        }
+        .transform-style-3d { 
+            transform-style: preserve-3d; 
+            -webkit-transform-style: preserve-3d;
+        }
+        .backface-hidden { 
+            backface-visibility: hidden; 
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 { 
+            transform: rotateY(180deg); 
+            -webkit-transform: rotateY(180deg);
+        }
         .card-container {
             transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+            -webkit-transition: -webkit-transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
         }
         .is-flipped .card-container {
             transform: rotateY(180deg);
+            -webkit-transform: rotateY(180deg);
         }
 
         /* Animations */
@@ -49,49 +63,45 @@
         }
         .animate-pulse-glow { animation: pulse-glow 2s infinite; }
 
-        /* Hide scrollbar for neatness */
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="bg-slate-900 bg-pattern relative min-h-screen pb-24">
 
-    <canvas id="confetti" class="fixed inset-0 pointer-events-none z-50"></canvas>
+    <!-- Confetti Canvas 修复：默认置于底层(-10)，防止拦截屏幕点击 -->
+    <canvas id="confetti" style="pointer-events: none; z-index: -10;" class="fixed inset-0"></canvas>
 
     <div class="max-w-md mx-auto relative z-10 bg-slate-900/40 min-h-screen border-x border-slate-800/50 shadow-2xl backdrop-blur-sm">
         
+        <!-- Header -->
         <header class="pt-12 pb-8 px-6 text-center relative overflow-hidden">
             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-indigo-600/30 rounded-full blur-3xl -z-10"></div>
-            
             <div class="inline-block border border-yellow-500/30 bg-yellow-500/10 text-yellow-300 text-[10px] font-bold px-3 py-1 rounded-full mb-4 tracking-widest uppercase">
                 湖南大学土木工程学院 · 心语茶话
             </div>
-            
             <h1 class="text-5xl title-font text-transparent bg-clip-text bg-gradient-to-b from-yellow-100 to-yellow-500 filter drop-shadow-[0_2px_10px_rgba(234,179,8,0.3)] mb-2">
                 人生拍卖会
             </h1>
             <p class="text-indigo-200 text-sm font-medium tracking-widest mt-3">—— 室内心理成长营 ——</p>
         </header>
 
-        <section class="px-6 mb-10">
+        <!-- Section 1: The Wallet -->
+        <section class="px-6 mb-10 relative z-20">
             <div class="bg-gradient-to-br from-indigo-900 to-slate-800 rounded-2xl p-6 border border-indigo-500/30 shadow-xl relative overflow-hidden">
                 <div class="absolute -right-6 -top-6 text-6xl opacity-10">💰</div>
-                
                 <h2 class="text-sm text-indigo-200 mb-1">你的专属启动资金</h2>
+                <div id="wallet-balance" class="text-4xl font-black text-white title-font tracking-wider my-2">0</div>
+                <p id="wallet-hint" class="text-xs text-slate-400 mb-5 transition-colors">点击下方按钮，领取入场筹码</p>
                 
-                <div id="wallet-balance" class="text-4xl font-black text-white title-font tracking-wider my-2">
-                    0
-                </div>
-                
-                <p id="wallet-hint" class="text-xs text-slate-400 mb-5">点击下方按钮，领取入场筹码</p>
-                
-                <button id="claim-btn" onclick="claimMoney()" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-slate-900 font-bold py-3 rounded-xl transition-all active:scale-95 animate-pulse-glow flex items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
+                <button id="claim-btn" onclick="claimMoney()" class="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-slate-900 font-bold py-3 rounded-xl transition-all active:scale-95 animate-pulse-glow flex items-center justify-center gap-2 cursor-pointer relative z-30">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 pointer-events-none" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
                     点击领取 1,000,000 筹码
                 </button>
             </div>
         </section>
 
-        <section class="px-6 mb-10">
+        <!-- Section 2: Auction Items (Flip Cards) -->
+        <section class="px-6 mb-10 relative z-20">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-white flex items-center gap-2">
                     <span class="text-xl">🔨</span> 绝密拍品图鉴
@@ -101,13 +111,16 @@
 
             <div class="grid grid-cols-2 gap-4">
                 
-                <div class="perspective-1000 aspect-[3/4] cursor-pointer group" onclick="this.classList.toggle('is-flipped')">
-                    <div class="card-container w-full h-full relative transform-style-3d">
+                <!-- Card 1 -->
+                <div class="perspective-1000 aspect-[3/4] cursor-pointer group" onclick="flipCard(this)">
+                    <div class="card-container w-full h-full relative transform-style-3d pointer-events-none">
+                        <!-- Front -->
                         <div class="absolute inset-0 backface-hidden bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg group-hover:border-indigo-400/50 transition-colors">
                             <div class="w-12 h-12 rounded-full bg-indigo-900/50 flex items-center justify-center text-2xl mb-3">❓</div>
                             <h4 class="text-sm font-bold text-slate-200">神秘拍品 01</h4>
                             <p class="text-[10px] text-indigo-400 mt-2 font-mono">LOT 01</p>
                         </div>
+                        <!-- Back -->
                         <div class="absolute inset-0 backface-hidden rotate-y-180 bg-indigo-600 border border-indigo-400 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
                             <h4 class="text-sm font-bold text-yellow-300 mb-2">关于「告别延期」的机密规划</h4>
                             <p class="text-xs text-white/90 leading-relaxed font-medium">从课程到毕业，每一步的重点都已为你标好。</p>
@@ -118,8 +131,293 @@
                     </div>
                 </div>
 
-                <div class="perspective-1000 aspect-[3/4] cursor-pointer group" onclick="this.classList.toggle('is-flipped')">
-                    <div class="card-container w-full h-full relative transform-style-3d">
+                <!-- Card 2 -->
+                <div class="perspective-1000 aspect-[3/4] cursor-pointer group" onclick="flipCard(this)">
+                    <div class="card-container w-full h-full relative transform-style-3d pointer-events-none">
+                        <!-- Front -->
                         <div class="absolute inset-0 backface-hidden bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg group-hover:border-indigo-400/50 transition-colors">
                             <div class="w-12 h-12 rounded-full bg-indigo-900/50 flex items-center justify-center text-2xl mb-3">❓</div>
-                            <h4 class="text-sm font-bold text
+                            <h4 class="text-sm font-bold text-slate-200">神秘拍品 02</h4>
+                            <p class="text-[10px] text-indigo-400 mt-2 font-mono">LOT 02</p>
+                        </div>
+                        <!-- Back -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 bg-indigo-600 border border-indigo-400 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
+                            <h4 class="text-sm font-bold text-yellow-300 mb-2">打破「师生结界」的破冰机会</h4>
+                            <p class="text-xs text-white/90 leading-relaxed font-medium">不用纠结怎么开口，获得一次畅所欲言的时间。</p>
+                            <div class="mt-auto bg-yellow-400 text-slate-900 text-[10px] font-black px-3 py-1 rounded-full">
+                                起拍: 15 万
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="perspective-1000 aspect-[3/4] cursor-pointer group" onclick="flipCard(this)">
+                    <div class="card-container w-full h-full relative transform-style-3d pointer-events-none">
+                        <!-- Front -->
+                        <div class="absolute inset-0 backface-hidden bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg group-hover:border-indigo-400/50 transition-colors">
+                            <div class="w-12 h-12 rounded-full bg-indigo-900/50 flex items-center justify-center text-2xl mb-3">❓</div>
+                            <h4 class="text-sm font-bold text-slate-200">神秘拍品 03</h4>
+                            <p class="text-[10px] text-indigo-400 mt-2 font-mono">LOT 03</p>
+                        </div>
+                        <!-- Back -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 bg-indigo-600 border border-indigo-400 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
+                            <h4 class="text-sm font-bold text-yellow-300 mb-2">专治「学术迷茫」的起步锦囊</h4>
+                            <p class="text-xs text-white/90 leading-relaxed font-medium">文献怎么读、实验怎么做，解锁清楚的起步方法。</p>
+                            <div class="mt-auto bg-yellow-400 text-slate-900 text-[10px] font-black px-3 py-1 rounded-full">
+                                起拍: 10 万
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 4 -->
+                <div class="perspective-1000 aspect-[3/4] cursor-pointer group" onclick="flipCard(this)">
+                    <div class="card-container w-full h-full relative transform-style-3d pointer-events-none">
+                        <!-- Front -->
+                        <div class="absolute inset-0 backface-hidden bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg group-hover:border-indigo-400/50 transition-colors">
+                            <div class="w-12 h-12 rounded-full bg-indigo-900/50 flex items-center justify-center text-2xl mb-3">❓</div>
+                            <h4 class="text-sm font-bold text-slate-200">神秘拍品 04</h4>
+                            <p class="text-[10px] text-indigo-400 mt-2 font-mono">LOT 04</p>
+                        </div>
+                        <!-- Back -->
+                        <div class="absolute inset-0 backface-hidden rotate-y-180 bg-indigo-600 border border-indigo-400 rounded-xl p-4 flex flex-col items-center justify-center text-center shadow-lg">
+                            <h4 class="text-sm font-bold text-yellow-300 mb-2">找回「松弛感」的神奇配方</h4>
+                            <p class="text-xs text-white/90 leading-relaxed font-medium">既能高效推进任务，也能安心留时间给自己。</p>
+                            <div class="mt-auto bg-yellow-400 text-slate-900 text-[10px] font-black px-3 py-1 rounded-full">
+                                起拍: 5 万
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Width Card 5 -->
+            <div class="mt-4 perspective-1000 h-32 cursor-pointer group" onclick="flipCard(this)">
+                <div class="card-container w-full h-full relative transform-style-3d pointer-events-none">
+                    <!-- Front -->
+                    <div class="absolute inset-0 backface-hidden bg-gradient-to-r from-slate-800 to-slate-700 border border-slate-600 rounded-xl p-4 flex items-center shadow-lg group-hover:border-yellow-400/50 transition-colors">
+                        <div class="w-14 h-14 rounded-full bg-yellow-500/20 flex items-center justify-center text-3xl mr-4 flex-shrink-0 animate-float">🚀</div>
+                        <div class="text-left">
+                            <h4 class="text-base font-bold text-yellow-400">终极神秘大奖</h4>
+                            <p class="text-xs text-slate-400 mt-1">LOT 05 | 压轴大拍品</p>
+                        </div>
+                    </div>
+                    <!-- Back -->
+                    <div class="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-r from-yellow-600 to-yellow-500 border border-yellow-400 rounded-xl p-4 flex items-center shadow-lg">
+                        <div class="flex-1">
+                            <h4 class="text-sm font-bold text-slate-900 mb-1">写满「出路与底气」的通关秘籍</h4>
+                            <p class="text-xs text-slate-800 leading-relaxed font-medium">毕业与未来的双重指引，来现场亲自揭晓答案。</p>
+                        </div>
+                        <div class="bg-slate-900 text-yellow-400 text-xs font-black px-3 py-2 rounded-lg flex-shrink-0 ml-2">
+                            起拍<br>20 万
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rules & Rewards Section -->
+        <section class="px-6 mb-8 relative z-20">
+            <h3 class="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                <span class="text-xl">🎁</span> 拍卖行规则
+            </h3>
+            
+            <div class="bg-slate-800/80 rounded-xl p-1 divide-y divide-slate-700/50 border border-slate-700">
+                <div class="flex items-center gap-4 p-4">
+                    <div class="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center text-xl shrink-0">🍬</div>
+                    <div>
+                        <h4 class="text-sm font-bold text-pink-300">发言必得零食</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">加价时大声说出“为什么想要”，即使说“我论文写不完”，当场发放零食！</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 p-4">
+                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-xl shrink-0">🛍️</div>
+                    <div>
+                        <h4 class="text-sm font-bold text-blue-300">竞拍即享文创</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">成功拍下任意拍品，即可获得湖大专属高颜值文创盲盒/水杯/书签。</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 p-4">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-xl shrink-0">💌</div>
+                    <div>
+                        <h4 class="text-sm font-bold text-emerald-300">心语保底福利</h4>
+                        <p class="text-[11px] text-slate-400 mt-1">没拍到？没开口？只要填写匿名心语卡交予老师解惑，结束照领保底零食。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Fixed Bottom CTA Bar -->
+    <div class="fixed bottom-0 left-0 right-0 p-4 z-40 flex justify-center bg-gradient-to-t from-slate-900 via-slate-900 to-transparent">
+        <div class="max-w-md w-full">
+            <button onclick="showModal()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-lg py-4 rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.4)] border border-indigo-400 transition-transform active:scale-95 cursor-pointer">
+                立即锁定席位
+            </button>
+        </div>
+    </div>
+
+    <!-- Registration Modal -->
+    <div id="signup-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex-col items-center justify-center p-6 opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-sm p-6 relative transform scale-95 transition-transform duration-300" id="modal-content">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white p-2">
+                <svg class="w-6 h-6 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-2">🎫</div>
+                <h3 class="text-xl font-bold text-white">获取入场券</h3>
+                <p class="text-xs text-slate-400 mt-2 leading-relaxed">时间：6月30日（周二）下午 2:30-4:30<br>地点：研楼 D103</p>
+            </div>
+            
+            <div class="space-y-4">
+                <p class="text-sm text-slate-300 text-center mb-4">点击下方按钮去报名，锁定你的专属拍卖席位！</p>
+                <a href="https://v.wjx.cn/vm/mYvaSXs.aspx" target="_blank" class="block w-full text-center bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-300 hover:to-yellow-400 text-slate-900 font-bold py-3.5 rounded-xl shadow-[0_4px_15px_rgba(234,179,8,0.3)] transition-all active:scale-95 cursor-pointer">
+                    👉 立即点我报名
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic Script -->
+    <script>
+        let hasClaimed = false;
+
+        // 卡片翻转专属函数，防止事件冒泡导致的点击失效
+        function flipCard(element) {
+            element.classList.toggle('is-flipped');
+        }
+
+        // 数字滚动动画
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                
+                const currentValue = Math.floor(progress * (end - start) + start);
+                // 兼容性极好的数字格式化写法
+                obj.innerHTML = currentValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    obj.innerHTML = "1,000,000";
+                    
+                    const hint = document.getElementById('wallet-hint');
+                    hint.innerText = "筹码已就绪，请准备举牌";
+                    hint.classList.replace('text-slate-400', 'text-yellow-400');
+                    hint.classList.add('font-bold');
+                    
+                    const btn = document.getElementById('claim-btn');
+                    btn.innerHTML = "✓ 已成功领取";
+                    btn.className = "w-full bg-slate-700 text-slate-300 font-bold py-3 rounded-xl transition-all cursor-not-allowed border border-slate-600 flex items-center justify-center gap-2 relative z-30";
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // 领取筹码核心逻辑
+        function claimMoney() {
+            if (hasClaimed) return;
+            hasClaimed = true;
+            
+            // 点击反馈动画
+            const btn = document.getElementById('claim-btn');
+            btn.style.transform = "scale(0.95)";
+            setTimeout(() => { btn.style.transform = "scale(1)"; }, 150);
+
+            const display = document.getElementById('wallet-balance');
+            animateValue(display, 0, 1000000, 1500);
+            
+            // 唤醒撒花图层 (将-10改为50显示出来)
+            const canvas = document.getElementById('confetti');
+            canvas.style.zIndex = '50';
+            fireConfetti();
+            
+            // 撒花结束后把图层藏回深处，绝对防止阻挡后续点击
+            setTimeout(() => {
+                canvas.style.zIndex = '-10';
+            }, 6000);
+        }
+
+        // 撒花特效 Vanilla JS
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const pieces = [];
+            const colors = ['#fde047', '#fbbf24', '#818cf8', '#e879f9', '#ffffff'];
+
+            for (let i = 0; i < 100; i++) {
+                pieces.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2 + 100,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 1) * 20 - 5,
+                    size: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    rotation: Math.random() * 360,
+                    rotationSpeed: (Math.random() - 0.5) * 10
+                });
+            }
+
+            function render() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+
+                pieces.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.5; // gravity
+                    p.rotation += p.rotationSpeed;
+
+                    if (p.y < canvas.height) {
+                        active = true;
+                        ctx.save();
+                        ctx.translate(p.x, p.y);
+                        ctx.rotate(p.rotation * Math.PI / 180);
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                        ctx.restore();
+                    }
+                });
+
+                if (active) {
+                    requestAnimationFrame(render);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            render();
+        }
+
+        // 弹窗控制逻辑
+        function showModal() {
+            const modal = document.getElementById('signup-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                content.classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('signup-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }, 300);
+        }
+    </script>
+</body>
+</html>
