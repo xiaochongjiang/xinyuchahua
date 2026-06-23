@@ -3,286 +3,304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>心语茶话 | 人生拍卖会</title>
+    <title>心语茶话 · 人生拍卖会</title>
     <style>
+        /* 基础变量与全局重置 */
         :root {
-            --primary-color: #8B1C31; /* 湖大红底色变体 */
-            --accent-color: #D4AF37; /* 拍卖会高级金 */
-            --bg-color: #FDFBF7;
-            --text-main: #333333;
+            --primary-color: #8B4513; /* 温暖的木质色，契合拍卖槌和茶话会 */
+            --bg-color: #FAF4E8; /* 米色背景 */
+            --text-color: #333;
+            --accent-color: #D2691E;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-main);
+            color: var(--text-color);
             overflow-x: hidden;
+            scroll-behavior: smooth;
         }
-        .hero {
-            background: linear-gradient(135deg, #1A1A24 0%, #2D2122 100%);
-            color: white;
-            text-align: center;
-            padding: 80px 20px;
-            position: relative;
-        }
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            color: var(--accent-color);
-            letter-spacing: 2px;
-        }
-        .hero p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-            max-width: 600px;
-            margin: 0 auto 20px auto;
-            line-height: 1.6;
-        }
-        .info-bar {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 15px 0;
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.1rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-        /* 悬念拍品展示区 */
-        .auction-items {
+
+        /* 页面分屏容器 */
+        .section {
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
-            gap: 20px;
-            margin-top: 40px;
-        }
-        .item-card {
-            background: #eee;
-            border-radius: 12px;
-            flex: 1;
-            height: 150px;
-            display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease;
-        }
-        .item-card:hover {
-            transform: translateY(-5px);
-        }
-        .blur-overlay {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(8px);
-            display: flex;
             align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: bold;
+            padding: 2rem;
+            text-align: center;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 第一屏：首屏引入 */
+        .hero-title {
+            font-size: 2.5rem;
             color: var(--primary-color);
-            transition: backdrop-filter 0.5s ease;
+            margin-bottom: 1rem;
+            border-right: 2px solid var(--primary-color);
+            white-space: nowrap;
+            overflow: hidden;
+            animation: typing 2s steps(10) forwards, blink 0.5s step-end infinite alternate;
         }
-        .item-card:hover .blur-overlay {
-            backdrop-filter: blur(2px);
-            color: transparent;
+        .hero-subtitle { font-size: 1.2rem; margin-bottom: 3rem; color: #666; line-height: 1.6; }
+        .scroll-down {
+            font-size: 2rem;
+            color: var(--primary-color);
+            animation: bounce 2s infinite;
         }
-        .hidden-text {
+
+        /* 第二屏：翻转卡片 */
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        .flip-card {
+            background-color: transparent;
+            width: 280px;
+            height: 180px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             padding: 20px;
             font-size: 1.1rem;
-            color: var(--text-main);
-            font-weight: bold;
         }
-        /* 奖励滚动横幅 */
-        .rewards {
-            margin: 50px 0;
-            padding: 30px;
-            background: #fff;
-            border-left: 5px solid var(--accent-color);
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        .flip-card-front { background-color: var(--primary-color); color: white; font-weight: bold; }
+        .flip-card-back { background-color: white; color: var(--primary-color); transform: rotateY(180deg); border: 2px solid var(--primary-color); }
+
+        /* 第三屏：文创盲盒 */
+        .gifts-grid {
+            display: flex;
+            gap: 20px;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-        .rewards h3 {
-            margin-top: 0;
-            color: var(--primary-color);
-        }
-        .highlight {
-            color: var(--accent-color);
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-        /* 报名表单 */
-        .registration-form {
+        .gift-item {
             background: white;
-            padding: 40px;
+            padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 200px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        .form-group input {
+        .blind-box { cursor: pointer; transition: transform 0.3s; }
+        .blind-box:active, .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        .gift-icon { font-size: 3rem; margin-bottom: 10px; }
+
+        /* 第四屏：活动详情 */
+        .details-box {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            text-align: left;
+            line-height: 2;
+            box-shadow: 0 8px 24px rgba(139, 69, 19, 0.1);
+            border-top: 5px solid var(--primary-color);
             width: 100%;
+            max-width: 500px;
+        }
+        .details-box strong { color: var(--primary-color); }
+
+        /* 第五屏：报名表单 */
+        form { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; }
+        input, select {
             padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
             font-size: 1rem;
-            box-sizing: border-box;
+            outline: none;
             transition: border-color 0.3s;
         }
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-        .submit-btn {
-            width: 100%;
+        input:focus, select:focus { border-color: var(--primary-color); }
+        button {
+            padding: 15px;
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 15px;
-            font-size: 1.2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
             font-weight: bold;
-            border-radius: 6px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: background 0.3s;
             margin-top: 10px;
         }
-        .submit-btn:hover {
-            background-color: #6a1525;
-        }
-        /* 弹窗样式 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-        }
-        .modal-content {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            text-align: center;
-            max-width: 400px;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        @keyframes popIn {
-            0% { transform: scale(0.8); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .gavel-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            display: block;
-            animation: hammer 0.5s ease 1;
-            transform-origin: bottom right;
-        }
-        @keyframes hammer {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(-45deg); }
-            100% { transform: rotate(0deg); }
+        button:hover { background-color: var(--accent-color); }
+        .success-msg { display: none; color: green; font-weight: bold; margin-top: 15px; }
+
+        /* 动画定义 */
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink { 50% { border-color: transparent } }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-15px); } 60% { transform: translateY(-7px); } }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
     </style>
 </head>
 <body>
 
-    <div class="hero">
-        <h1>人生拍卖会</h1>
-        <p>土木工程学院 “心语茶话” 室内心理成长营<br>在这里，用虚拟筹码，拍下你潜意识里最渴望的风景。</p>
-    </div>
+    <!-- 第一屏：首屏引入 -->
+    <section class="section" id="sec1">
+        <h1 class="hero-title">心语茶话 · 人生拍卖会</h1>
+        <p class="hero-subtitle">如果你有一笔虚拟货币，<br>你最想拍下什么属于自己的特别“拍品”？</p>
+        <div class="scroll-down">👇<br><span style="font-size:1rem;">上滑入场</span></div>
+    </section>
 
-    <div class="info-bar">
-        📍 研楼 D103 &nbsp; | &nbsp; 🕒 6月30日 14:30 - 16:30
-    </div>
-
-    <div class="container">
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <h2>神秘拍品，等你举牌</h2>
-            <p style="color: #666;">（将鼠标悬停在卡片上，试着感受你的心动选项）</p>
-        </div>
-
-        <div class="auction-items">
-            <div class="item-card">
-                <div class="hidden-text">一份清晰的<br>毕业时间表？</div>
-                <div class="blur-overlay">拍品 01</div>
-            </div>
-            <div class="item-card">
-                <div class="hidden-text">更稳定的<br>科研节奏？</div>
-                <div class="blur-overlay">拍品 02</div>
-            </div>
-            <div class="item-card">
-                <div class="hidden-text">重新整理<br>生活状态的机会？</div>
-                <div class="blur-overlay">拍品 03</div>
-            </div>
-        </div>
-
-        <div class="rewards">
-            <h3>🎁 专属竞拍福利</h3>
-            <p>本次活动为主理人准备了丰厚的专属文创！现场成功拍得任意拍品，即有机会解锁 <span class="highlight">土木院硬核建筑积木盲盒</span>、<span class="highlight">背包小熊</span> 以及 <span class="highlight">岳麓书院镂空纸雕本</span>。全程未出价的观望者，也有保底零食相送哦！</p>
-        </div>
-
-        <div class="registration-form" id="regForm">
-            <h2 style="text-align: center; margin-top: 0; color: var(--primary-color);">买家入场登记</h2>
-            <form id="auctionForm">
-                <div class="form-group">
-                    <label for="name">姓名</label>
-                    <input type="text" id="name" placeholder="请输入你的真实姓名" required>
+    <!-- 第二屏：痛点与悬念（翻转卡片） -->
+    <section class="section">
+        <h2>哪一件最值得你出价？</h2>
+        <p style="margin-top: 10px; color: #666;">点击翻转神秘拍品，来现场揭晓更多惊喜</p>
+        <div class="cards-container">
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">拍品 01 号 <br> ❓</div>
+                    <div class="flip-card-back">一份清晰的<br>毕业时间表</div>
                 </div>
-                <div class="form-group">
-                    <label for="studentId">学号</label>
-                    <input type="text" id="studentId" placeholder="请输入你的学号" required>
+            </div>
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">拍品 02 号 <br> ❓</div>
+                    <div class="flip-card-back">更稳定的<br>科研节奏</div>
                 </div>
-                <div class="form-group">
-                    <label for="major">研究方向/专业</label>
-                    <input type="text" id="major" placeholder="例如：土木水利、岩土工程等" required>
+            </div>
+            <div class="flip-card">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">拍品 03 号 <br> ❓</div>
+                    <div class="flip-card-back">一次重新整理<br>生活状态的机会</div>
                 </div>
-                <button type="submit" class="submit-btn">🙋‍♂️ 举牌！领取我的 100 万虚拟金</button>
-            </form>
+            </div>
         </div>
+    </section>
 
-    </div>
-
-    <div class="modal" id="successModal">
-        <div class="modal-content">
-            <span class="gavel-icon">⚖️</span>
-            <h2 style="color: var(--primary-color);">成交！入场券已确认</h2>
-            <p>你已成功领取初始竞拍资金。<br>6月30日 14:30，研楼D103，期待你的精彩举牌！</p>
-            <button onclick="closeModal()" style="margin-top: 15px; padding: 10px 30px; background: #333; color: white; border: none; border-radius: 5px; cursor: pointer;">期待入场</button>
+    <!-- 第三屏：文创奖品展示（积木盲盒互动） -->
+    <section class="section">
+        <h2>丰富湖大文创，满载而归</h2>
+        <div class="gifts-grid">
+            <div class="gift-item">
+                <div class="gift-icon">🎒</div>
+                <h3>背包小熊</h3>
+            </div>
+            <div class="gift-item">
+                <div class="gift-icon">🏛️</div>
+                <h3>镂空纸雕本</h3>
+            </div>
+            <div class="gift-item blind-box" id="blindBox" onclick="openBox()">
+                <div class="gift-icon" id="boxIcon">📦</div>
+                <h3 id="boxText">建筑积木盲盒<br><span style="font-size:0.8rem;color:#888;">(点击拆开看看)</span></h3>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- 第四屏：活动详情 -->
+    <section class="section">
+        <h2 style="margin-bottom: 20px;">竞拍指南</h2>
+        <div class="details-box">
+            <p><strong>👥 活动对象：</strong>土木工程学院全体硕士研究生</p>
+            <p><strong>📅 活动时间：</strong>6月30日（周二）下午 2:30 - 4:30</p>
+            <p><strong>📍 活动地点：</strong>研楼 D103</p>
+            <p><strong>🏢 主办单位：</strong>湖南大学土木工程学院</p>
+            <p><strong>🎭 活动形式：</strong>趣味互动 · 人生拍卖会</p>
+        </div>
+    </section>
+
+    <!-- 第五屏：报名表单 -->
+    <section class="section">
+        <h2>获取竞拍资格</h2>
+        <p style="margin-bottom: 20px; color: #666;">席位有限，请填写信息预留名额</p>
+        <form id="regForm">
+            <input type="text" placeholder="姓名" required>
+            <input type="text" placeholder="学号" required>
+            <input type="tel" placeholder="联系方式 (微信或手机)" required>
+            <select required>
+                <option value="" disabled selected>如果你有100虚拟币，最想投资在...</option>
+                <option value="科研">科研学业的突破</option>
+                <option value="生活">个人生活的松弛感</option>
+                <option value="情感">人际与情感关系</option>
+                <option value="其他">去了现场再决定</option>
+            </select>
+            <button type="submit">举牌竞拍 (确认报名)</button>
+            <div class="success-msg" id="successMsg">🎉 报名成功！期待在 D103 与你相见！</div>
+        </form>
+    </section>
 
     <script>
-        document.getElementById('auctionForm').addEventListener('submit', function(e) {
-            e.preventDefault(); // 阻止表单真实跳转
-            
-            // 获取表单数据（后续可以通过接口发送到研会的后台，目前为纯前端展示）
-            const name = document.getElementById('name').value;
-            
-            // 显示成功弹窗
-            document.getElementById('successModal').style.display = 'flex';
+        // 1. 滚动监听：实现元素滑入视野时的淡入动画
+        const sections = document.querySelectorAll('.section');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if(entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        sections.forEach(section => {
+            observer.observe(section);
         });
 
-        function closeModal() {
-            document.getElementById('successModal').style.display = 'none';
-            // 清空表单
-            document.getElementById('auctionForm').reset();
+        // 2. 盲盒点击互动：模拟拼搭拆盒的乐趣
+        let isOpened = false;
+        function openBox() {
+            if(isOpened) return;
+            const box = document.getElementById('blindBox');
+            const icon = document.getElementById('boxIcon');
+            const text = document.getElementById('boxText');
+            
+            box.classList.add('shake');
+            
+            setTimeout(() => {
+                icon.innerHTML = '🧱✨'; // 变为积木和闪烁
+                text.innerHTML = '隐藏款积木已解锁！<br><span style="font-size:0.8rem;color:#888;">来现场亲自拼装吧</span>';
+                box.classList.remove('shake');
+                isOpened = true;
+                box.style.border = "2px solid #8B4513";
+            }, 600);
         }
+
+        // 3. 表单提交模拟
+        document.getElementById('regForm').addEventListener('submit', function(e) {
+            e.preventDefault(); // 阻止页面默认跳转
+            // 此处可接入您真实的表单收集接口 (如金数据、问卷星API等)
+            const btn = this.querySelector('button');
+            btn.innerHTML = '报名提交中...';
+            btn.style.opacity = '0.7';
+            
+            setTimeout(() => {
+                btn.style.display = 'none';
+                document.getElementById('successMsg').style.display = 'block';
+            }, 1000);
+        });
     </script>
 </body>
 </html>
